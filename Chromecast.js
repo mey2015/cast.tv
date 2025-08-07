@@ -1,5 +1,5 @@
-    const videoElement = document.getElementById('main-video');
-    const chromecastButton = document.getElementById('chromecastButton');
+   // const videoElement = document.getElementById('main-video');
+  //  const chromecastButton = document.getElementById('chromecastButton');
     let castSession = null;
     let remotePlayer = null;
     let remotePlayerController = null;
@@ -150,3 +150,4 @@
         chromecastButton.setAttribute('data-cast-state', 'NO_DEVICES_AVAILABLE');
       }
     };
+
