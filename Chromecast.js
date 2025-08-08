@@ -1,11 +1,15 @@
 
+    const videoElement = document.getElementById('main-video');
+    const chromecastButton = document.getElementById('chromecast');
+    let castSession = null;
+    let remotePlayer = null;
+    let remotePlayerController = null;
 
 // ฟังก์ชันเริ่มต้น Chromecast API
 function initChromecast() {
     if(typeof chrome === undefined) {
       return;
     }
-
 
     // ตั้งค่า interval เพื่อตรวจสอบว่า Cast API พร้อมใช้งานแล้วหรือไม่
     var loadCastInterval = setInterval(function() {
@@ -20,7 +24,6 @@ function initChromecast() {
     }, 1000); // ตรวจสอบทุกๆ 1 วินาที
 }
 
-
 // ฟังก์ชันสำหรับเริ่มต้น Cast Context
 function initCastApi() {
     cast.framework.CastContext.getInstance().setOptions({
@@ -30,7 +33,6 @@ function initCastApi() {
         autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
     });
 }
-
 
 // ฟังก์ชันสำหรับเชื่อมต่อกับเซสชันการแคสต์
 function connectToSession() {
@@ -50,14 +52,12 @@ function connectToSession() {
     });
 }
 
-
 // ฟังก์ชันสำหรับตั้งค่า Event Listener บนปุ่มต่างๆ
 function buttonEvents() {
     // เลือกปุ่ม Cast โดยตรง
-    document.querySelector('.js-cast').addEventListener('click', function(event) {
+    document.querySelector('.chromecast').addEventListener('click', function(event) {
         launchApp(); // เมื่อคลิกปุ่ม Cast ให้เริ่มแคสต์
     });
-
 
     // เลือกส่วนควบคุมการแคสต์
     const castingControls = document.querySelector('.js-casting-controls');
@@ -75,33 +75,28 @@ function buttonEvents() {
     });
 }
 
-
 // ฟังก์ชันสำหรับเริ่มต้นการแคสต์วิดีโอ
 function launchApp() {
     console.log('Attempting to launch cast session...');
-
-
 
 
     // เชื่อมต่อกับเซสชัน Chromecast
     return connectToSession()
     .then((session) => {
         // ดึง URL ของวิดีโอจากแท็ก <video> โดยตรง
-        var videoSrc = document.querySelector('.js-video-element source').getAttribute('src');
+        var videoSrc = document.querySelector('.source').getAttribute('src');
         if (!videoSrc) {
             throw new Error('Video source not found.');
         }
-
-
+          // หยุดวิดีโอท้องถิ่นชั่วคราวเมื่อทำการแคสต์
+          videoElement.pause();
         // สร้าง MediaInfo object สำหรับวิดีโอที่จะแคสต์
         var mediaInfo = new chrome.cast.media.MediaInfo(videoSrc);
         mediaInfo.contentType = 'video/mp4'; // กำหนดประเภทของสื่อ
 
-
         // สร้าง LoadRequest
         var request = new chrome.cast.media.LoadRequest(mediaInfo);
         request.autoplay = true; // ตั้งค่าให้เล่นอัตโนมัติเมื่อแคสต์
-
 
         // โหลดมีเดียไปยังอุปกรณ์ Chromecast
         return session.loadMedia(request);
@@ -113,19 +108,16 @@ function launchApp() {
     .catch((error) => {
         console.error('Error launching cast session:', error);
 
-
         // หากเกิดข้อผิดพลาด ให้คืนค่าการแสดงผลเดิม
         document.querySelector('.js-video-element').style.display = 'block'; //❌
         document.querySelector('.js-casting-controls').setAttribute('aria-hidden', 'true');
     });
 }
 
-
 // ฟังก์ชันสำหรับฟังการควบคุมจากรีโมท (อุปกรณ์ Chromecast)
 function listenToRemote() { //❌
     var player = new cast.framework.RemotePlayer(); //❌
     var playerController = new cast.framework.RemotePlayerController(player); //❌
-
 
     // เมื่อสถานะของ Player มีการเปลี่ยนแปลง (เช่น เล่น/หยุดชั่วคราว)
     playerController.addEventListener(
@@ -134,7 +126,6 @@ function listenToRemote() { //❌
             console.log('Remote player status changed. Is paused:', player.isPaused);
         }
     );
-
 
     // เมื่อสถานะการเชื่อมต่อมีการเปลี่ยนแปลง
     playerController.addEventListener(
@@ -147,7 +138,6 @@ function listenToRemote() { //❌
     );
 }
 
-
 // ฟังก์ชันสำหรับสลับสถานะเล่น/หยุดชั่วคราว
 function togglePlayPause() {
     var player = new cast.framework.RemotePlayer();
@@ -155,7 +145,6 @@ function togglePlayPause() {
     playerController.playOrPause();
     console.log('Toggling play/pause on remote device.'); //❌
 }
-
 
 // ฟังก์ชันสำหรับหยุดการแคสต์
 function stopApp() {
@@ -169,8 +158,5 @@ function stopApp() {
     document.querySelector('.js-casting-controls').setAttribute('aria-hidden', 'true');
 }
 
-
 // เริ่มต้นกระบวนการ Chromecast เมื่อ DOM โหลดเสร็จสมบูรณ์
 window.addEventListener('load', initChromecast);
-
-
